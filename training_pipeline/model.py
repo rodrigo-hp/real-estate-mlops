@@ -100,7 +100,7 @@ def main():
         )
 
     # Set target and train model
-    remove_cols = ["id", "target"]
+    remove_cols = ["price"]
     train_cols = [col for col in train_df.columns if col not in remove_cols]
     target = "price"
     model = train_model(train_df, train_cols, target)
