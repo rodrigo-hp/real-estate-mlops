@@ -5,13 +5,15 @@ FROM python:3.9-slim-buster
 WORKDIR /training_pipeline
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+COPY requirements.txt requirements.txt
 
 # Install the Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
 # Copy the training pipeline code into the container
-COPY ./ /training_pipeline
+COPY ./model.py /training_pipeline
+COPY ./utils.py /training_pipeline
 
 # Run the training script
 CMD ["python", "-m", "model"]
