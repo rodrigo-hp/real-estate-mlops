@@ -56,6 +56,10 @@ jobs:
         run: |-
           docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.TRAINING_PIPELINE_IMAGE_NAME }}:${{ github.sha }}" ./training_pipeline
 
+      - name: Push Container
+        run: |-
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.TRAINING_PIPELINE_IMAGE_NAME }}:${{ github.sha }}"
+      
       - name: Run Container with Training Pipeline
         run: |-
           docker run -d -t -e ${{ env.GCP_PROJECT_NAME }} \
@@ -69,6 +73,7 @@ jobs:
 
   build_and_test:
     name: Build App Container and Run Unit Tests
+    needs: train_and_upload_model
     # Add 'id-token' with the intended permissions for workload identity federation
     permissions:
       contents: 'read'
@@ -102,6 +107,10 @@ jobs:
         run: |-
           docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.APP_IMAGE_NAME }}:${{ github.sha }}" ./app
       
+      - name: Push Container
+        run: |-
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.APP_IMAGE_NAME }}:${{ github.sha }}"
+
       - name: Run Unit Tests in Container
         run: |-
           docker run -d -t -e ${{ env.GCP_PROJECT_NAME }} \
@@ -110,12 +119,8 @@ jobs:
           -e ${{ env.MODEL_PATH }} \
           -e ${{ env.API_KEY }} \
           -p 8080:8080 \
-          "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.APP_IMAGE_NAME }}" \
+          "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.APP_IMAGE_NAME }}:${{ github.sha }}" \
           pytest /app/test_app.py
-      
-      - name: Push Container
-        run: |-
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.APP_IMAGE_NAME }}:${{ github.sha }}"
 
   deploy:
     name: Deploy Image to Cloud Run
